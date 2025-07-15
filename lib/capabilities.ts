@@ -1,3 +1,5 @@
+import type { Capability } from '@data-fair/types-catalogs'
+
 /**
  * The list of capabilities of the plugin.
  * These capabilities define the actions that can be performed with the plugin.
@@ -5,15 +7,12 @@
  * This allows TypeScript to check if the plugin has the required funcitons for each capability.
  */
 export const capabilities = [
-  'import' as const,
-  'search' as const,
-  'pagination' as const,
-  'importConfig' as const,
-  'publishDataset' as const,
-  'deletePublication' as const,
-  'thumbnail' as const,
-  'thumbnailUrl' as const
-]
+  'import',
+  'search',
+  'pagination',
+  'importConfig',
+  'thumbnail',
+] satisfies Capability[]
 
-export type MockCapabilities = typeof capabilities
+export type DataFairCapabilities = typeof capabilities
 export default capabilities

@@ -1,33 +1,252 @@
 {
-  "$id": "https://github.com/data-fair/catalog-mock/import-config",
+  "$id": "https://github.com/data-fair/catalog-data-fair/import-config",
   "x-exports": [
     "types",
     "validate",
     "schema"
   ],
-  "title": "ImportConfig",
+  "title": "Configuration de l'import",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "nbRows"
-  ],
   "properties": {
-    "nbRows": {
-      "title": "Number of rows to import",
-      "x-i18n-title": {
-        "fr": "Nombre de lignes à importer"
+    "fields": {
+      "type": "array",
+      "default": [],
+      "title": "Colonnes du jeu de données",
+      "description": "La liste des colonnes à importer. Si ce champ est vide, toutes les colonnes seront importées.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
       },
-      "description": "Number of rows to import. The header is always imported and does not count towards this number.",
-      "x-i18n-description": {
-        "fr": "Nombre de lignes à importer. Le header est toujours importé et ne compte pas dans ce nombre."
-      },
-      "type": "integer",
-      "default": 10,
-      "minimum": 5,
-      "maximum": 50
+      "layout": {
+        "getItems": {
+          "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/schema?calculated=false",
+          "itemTitle": "item.label",
+          "itemKey": "item.key"
+        }
+      }
+    },
+    "filters": {
+      "$ref": "#/$defs/filters"
     }
   },
-  "layout": {
-    "title": null
+  "$defs": {
+    "filters": {
+      "title": "Filtres prédéfinis",
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "default": {
+          "type": "in"
+        },
+        "required": [
+          "type"
+        ],
+        "oneOf": [
+          {
+            "title": "Restreindre à des valeurs précises",
+            "required": [
+              "field",
+              "values",
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "in"
+              },
+              "field": {
+                "$ref": "#/$defs/filterField"
+              },
+              "values": {
+                "type": "array",
+                "title": "Valeurs",
+                "description": "Importe seulement des lignes où la valeur du champ indiqué est égale à l'une des valeurs renseignées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "items": {
+                  "type": "string"
+                },
+                "layout": {
+                  "getItems": {
+                    "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/values/${parent.data.field.key}?q={q}&q_mode=complete&size=100&stringify=true"
+                  },
+                  "props": {
+                    "clearable": true
+                  }
+                },
+                "default": []
+              }
+            }
+          },
+          {
+            "title": "Exclure des valeurs",
+            "required": [
+              "field",
+              "values",
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "nin"
+              },
+              "field": {
+                "$ref": "#/$defs/filterField"
+              },
+              "values": {
+                "type": "array",
+                "title": "Valeurs à exclure",
+                "description": "Importe seulement des lignes où la valeur du champ indiqué est différente des valeurs renseignées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "items": {
+                  "type": "string"
+                },
+                "layout": {
+                  "getItems": {
+                    "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/values/${parent.data.field.key}?q={q}&q_mode=complete&size=100&stringify=true"
+                  },
+                  "props": {
+                    "clearable": true
+                  }
+                },
+                "default": []
+              }
+            }
+          },
+          {
+            "title": "Supérieur à une valeur",
+            "required": [
+              "field",
+              "value",
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "gte"
+              },
+              "field": {
+                "$ref": "#/$defs/filterField"
+              },
+              "value": {
+                "type": "string",
+                "title": "Valeur minimale",
+                "description": "Importe seulement des lignes où la valeur du champ indiqué est supérieur ou égale à la valeur renseignée. La valeur peut être un nombre, une chaîne de caractère (*ordre alphanumérique*), une date.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "layout": {
+                  "comp": "combobox",
+                  "getItems": {
+                    "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/values/${parent.data.field.key}?q={q}&q_mode=complete&size=100&stringify=true&sort=asc"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "title": "Inférieur à une valeur",
+            "required": [
+              "field",
+              "value",
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "lte"
+              },
+              "field": {
+                "$ref": "#/$defs/filterField"
+              },
+              "value": {
+                "type": "string",
+                "title": "Valeur maximale",
+                "description": "Importe seulement les lignes où la valeur du champ indiqué est inférieur à la valeur renseignée. La valeur peut être un nombre, une chaîne de caractère (*ordre alphanumérique*), une date.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "layout": {
+                  "comp": "combobox",
+                  "getItems": {
+                    "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/values/${parent.data.field.key}?q={q}&q_mode=complete&size=100&stringify=true&sort=asc"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "title": "Commence par les caractères",
+            "required": [
+              "field",
+              "value",
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "starts"
+              },
+              "field": {
+                "$ref": "#/$defs/filterFieldString"
+              },
+              "value": {
+                "type": "string",
+                "description": "Importe seulement les lignes où le champ (colonne) indiqué commence par une chaîne de caractères précise. La chaîne de caractères est sensible à la casse.<br>Seuls les champs (colonnes) ayant pour valeurs des chaînes de caractères sont acceptées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "title": "Commence par les caractères",
+                "layout": {
+                  "comp": "combobox",
+                  "getItems": {
+                    "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/values/${parent.data.field.key}?q={q}&q_mode=complete&size=100&stringify=true"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "filterField": {
+      "type": "object",
+      "title": "Colonne de filtre",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "layout": {
+        "getItems": {
+          "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/schema?calculated=false",
+          "itemTitle": "item.label",
+          "itemKey": "item.key"
+        }
+      }
+    },
+    "filterFieldString": {
+      "type": "object",
+      "title": "Colonne de filtre",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "layout": {
+        "getItems": {
+          "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/schema?calculated=false&type=string",
+          "itemTitle": "item.label",
+          "itemKey": "item.key"
+        }
+      }
+    }
   }
 }

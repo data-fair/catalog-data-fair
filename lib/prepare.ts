@@ -1,44 +1,23 @@
 import type { PrepareContext } from '@data-fair/types-catalogs'
-import type { MockCapabilities } from './capabilities.ts'
-import type { MockConfig } from '#types'
+import type { DataFairCapabilities } from './capabilities.ts'
+import type { DataFairConfig } from '#types'
+import axios from '@data-fair/lib-node/axios.js'
 
-export default async ({ catalogConfig, capabilities, secrets }: PrepareContext<MockConfig, MockCapabilities>) => {
-  // Manage secrets
-  const secretField = catalogConfig.secretField
-  // If the config contains a secretField, and it is not already hidden
-  if (secretField && secretField !== '********') {
-    // Hide the secret in the catalogConfig, and copy it to secrets
-    secrets.secretField = secretField
-    catalogConfig.secretField = '********'
+export default async ({ catalogConfig, capabilities, secrets }: PrepareContext<DataFairConfig, DataFairCapabilities>) => {
+  // To remove when catalog/datasets allows q parameters
+  capabilities = capabilities.filter(c => c !== 'search')
 
-  // If the secretField is in the secrets, and empty in catalogConfig,
-  // then it means the user has cleared the secret in the config
-  } else if (secrets?.secretField && secretField === '') {
-    delete secrets.secretField
-  } else {
-    // The secret is already set, do nothing
-  }
-
-  // Manage capabilities
-  if (catalogConfig.searchCapability && !capabilities.includes('search')) capabilities.push('search')
-  else capabilities = capabilities.filter(c => c !== 'search')
-
-  if (catalogConfig.paginationCapability && !capabilities.includes('pagination')) capabilities.push('pagination')
-  else capabilities = capabilities.filter(c => c !== 'pagination')
-
-  let thumbnailUrl: string
-  if (catalogConfig.thumbnailUrl) {
-    if (!capabilities.includes('thumbnailUrl')) capabilities.push('thumbnailUrl')
-    thumbnailUrl = catalogConfig.thumbnailUrl
-  } else {
-    capabilities = capabilities.filter(c => c !== 'thumbnailUrl')
-    thumbnailUrl = ''
+  // test the url
+  try {
+    await axios.get(catalogConfig.url + '/data-fair/api/v1/catalog/datasets?size=1&select=id')
+  } catch (e) {
+    console.error('Erreur URL pendant la configuration : ', e instanceof Error ? e.message : e)
+    throw new Error('Configuration invalide, vérifiez l\'URL')
   }
 
   return {
     catalogConfig,
     capabilities,
-    secrets,
-    thumbnailUrl
+    secrets
   }
 }

@@ -1,2 +1,3 @@
-export { schema as configSchema, assertValid as assertConfigValid, type MockConfig } from './catalogConfig/index.ts'
-export { schema as importConfigSchema, assertValid as assertImportConfigValid, type ImportConfig } from './importConfig/index.ts'
+export { schema as configSchema, assertValid as assertConfigValid, type DataFairConfig } from './catalogConfig/index.ts'
+export { schema as importConfigSchema, assertValid as assertImportConfigValid, type ConfigurationDeLImport as ImportConfig } from './importConfig/index.ts'
+export type { DataFairCatalog, DataFairDataset } from './datafairSchemas/index.ts'

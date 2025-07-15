@@ -1,5 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <rect width="64" height="64" fill="#4CAF50" rx="8"/>
-  <circle cx="32" cy="32" r="20" fill="#ffffff" opacity="0.2"/>
-  <text x="32" y="38" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">MOCK</text>
+<svg viewBox="-5 0 110 100" width="200" height="200" class="logo" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="dropshadow">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+        <feOffset dx="2" dy="2" result="offsetblur"/>
+        <feMerge>
+            <feMergeNode/>
+            <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+    </filter>
+   </defs>
+    <g>
+        <!--<path d="M35,5 L65,5 L31,92 A4,4 0 0 1 28,95 L2,95 A3,3 0 0 1 1,92 Z" fill="#90caf9" filter="url(#dropshadow)"></path>
+        <path d="M65,5 L35,5 L69,92 A4,4 0 0 0 72,95 L98,95 A3,3 0 0 0 99,92 Z" fill="#0288d1" filter="url(#dropshadow)"></path>-->
+
+        <path d="M48,4 L71,52 L0,100 Z" fill="#0288d1" filter="url(#dropshadow)"/>
+        <path d="M50,0 L25,50 L100,100 Z" fill="#90caf9" filter="url(#dropshadow)"/>
+    </g>
 </svg>
