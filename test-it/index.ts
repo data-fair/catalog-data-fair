@@ -1,5 +1,5 @@
 import type { DataFairConfig, DataFairDataset } from '#types'
-import type { CatalogPlugin, ListResourcesContext } from '@data-fair/types-catalogs'
+import type { CatalogPlugin, GetResourceContext, ListResourcesContext } from '@data-fair/types-catalogs'
 import plugin from '../index.ts'
 import type { DataFairCapabilities } from '../lib/capabilities.ts'
 import { getResource } from '../lib/download.ts'
@@ -36,7 +36,8 @@ describe('catalog-data-fair', () => {
         title: 'Resource 1',
         file: {
           size: 1000
-        }
+        },
+        page: 'https://example.com/resource-1'
       },
       {
         id: 'res-2',
@@ -60,8 +61,27 @@ describe('catalog-data-fair', () => {
       assert.strictEqual(res.results.length, 2)
       assert.strictEqual(res.results[0].type, 'resource', 'Expected Resource')
       assert.strictEqual(res.path.length, 0, 'Expected no path')
-      assert.strictEqual(JSON.stringify(res.results[0]), JSON.stringify({ id: 'res-1', title: 'Resource 1', format: 'csv', size: 1000, type: 'resource' }))
-      assert.strictEqual(JSON.stringify(res.results[1]), JSON.stringify({ id: 'res-2', title: 'Resource 2', format: 'csv', size: 2000, type: 'resource' }))
+      assert.deepEqual(res.results[0], { id: 'res-1', title: 'Resource 1', format: 'csv', size: 1000, type: 'resource', origin: 'https://example.com/resource-1' })
+      assert.deepEqual(res.results[1], { id: 'res-2', title: 'Resource 2', format: 'csv', size: 2000, type: 'resource', origin: undefined })
+    })
+
+    it('should list with api key', async () => {
+      nock('https://example.com')
+        .get('/data-fair/api/v1/catalog/datasets?size=2&page=10')
+        .matchHeader('x-apiKey', 'testApiKey')
+        .reply(200, { count: 10, results: resources })
+
+      const res = await catalogPlugin.listResources({
+        catalogConfig: { ...catalogConfig, apiKey: '********' },
+        secrets: { apiKey: 'testApiKey' },
+        params: { page: 10, size: 2 }
+      })
+      assert.strictEqual(res.count, 10, 'Expected 2 items in the root folder')
+      assert.strictEqual(res.results.length, 2)
+      assert.strictEqual(res.results[0].type, 'resource', 'Expected Resource')
+      assert.strictEqual(res.path.length, 0, 'Expected no path')
+      assert.deepEqual(res.results[0], { id: 'res-1', title: 'Resource 1', format: 'csv', size: 1000, type: 'resource', origin: 'https://example.com/resource-1' })
+      assert.deepEqual(res.results[1], { id: 'res-2', title: 'Resource 2', format: 'csv', size: 2000, type: 'resource', origin: undefined })
     })
 
     it('should fail for resource not found', async () => {
@@ -84,20 +104,19 @@ describe('catalog-data-fair', () => {
 
   describe('test the download function', () => {
     const tmpDir = tmpdir()
-    const resourceId = 'my-test-resource'
-
-    const downloadContext = {
-      catalogConfig,
-      resourceId,
-      importConfig: {
-        fields: [],
-        filters: [],
-      },
-      tmpDir,
-      log: logFunctions
-    }
 
     it('should download full resource file when size > 0 and no filters', async () => {
+      const resourceId = 'my-test-resource'
+
+      const downloadContext: GetResourceContext<DataFairConfig> = {
+        catalogConfig,
+        resourceId,
+        secrets: {},
+        importConfig: {},
+        tmpDir,
+        log: logFunctions
+      }
+
       const metaUrl = `/data-fair/api/v1/datasets/${resourceId}`
       const fullFileUrl = `/data-fair/api/v1/datasets/${resourceId}/full`
 
@@ -109,13 +128,12 @@ describe('catalog-data-fair', () => {
           title: 'Test Resource',
           description: 'A simple CSV resource',
           frequency: 'monthly',
-          image: null,
           keywords: ['test'],
           file: {
             size: 1234
           },
-          schema: {},
-        })
+          schema: [],
+        } as DataFairDataset)
 
       // Mock file download stream
       const csvData = 'col1,col2\nval1,val2\nval3,val4\n'
@@ -132,11 +150,50 @@ describe('catalog-data-fair', () => {
       assert.match(content, /val1,val2/, 'CSV should contain expected data')
     })
 
+    it('should call with apiKey in secrets', async () => {
+      const resourceId = 'my-test-resource-with-apiKey'
+
+      const downloadContext: GetResourceContext<DataFairConfig> = {
+        catalogConfig: { ...catalogConfig, apiKey: '********' },
+        resourceId,
+        secrets: { apiKey: 'testApiKey' },
+        importConfig: {},
+        tmpDir,
+        log: logFunctions
+      }
+
+      const metaUrl = `/data-fair/api/v1/datasets/${resourceId}`
+      const linesUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000`
+      // Mock metadata request
+      nock(catalogConfig.url)
+        .get(metaUrl)
+        .matchHeader('x-apiKey', 'testApiKey')
+        .reply(200, {
+          id: resourceId,
+          title: 'Test Resource',
+          description: 'A simple CSV resource',
+        })
+      // Mock file download stream
+      const csvData = 'col1,col2\nval1,val2\nval3,val4\n'
+      nock(catalogConfig.url)
+        .get(linesUrl)
+        .matchHeader('x-apiKey', 'testApiKey')
+        .reply(200, csvData, { 'Content-Type': 'text/csv' })
+
+      const resource = await getResource(downloadContext)
+      // Check file exists and content matches
+      assert.ok(resource?.filePath, 'File path should be set in resource')
+      assert.ok(fs.existsSync(resource.filePath), 'Downloaded file should exist')
+      const content = fs.readFileSync(resource.filePath, 'utf8')
+      assert.match(content, /val1,val2/, 'CSV should contain expected data')
+    })
+
     it('should download filtered resource as lines with select and filters', async () => {
       const resourceId = 'filtered-resource'
-      const contextWithFilters = {
+      const contextWithFilters: GetResourceContext<DataFairConfig> = {
         catalogConfig,
         resourceId,
+        secrets: {},
         importConfig: {
           fields: [{ key: 'field1' }, { key: 'field2' }],
           filters: [{ field: { key: 'year' }, type: 'gte', value: '2020' }]
@@ -146,8 +203,7 @@ describe('catalog-data-fair', () => {
       }
 
       const metaUrl = `/data-fair/api/v1/datasets/${resourceId}`
-      const linesUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=3000&select=field1,field2&year_gte=2020`
-
+      const linesUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000&select=field1,field2&year_gte=2020`
       // Mock metadata
       nock(catalogConfig.url)
         .get(metaUrl)
@@ -156,19 +212,13 @@ describe('catalog-data-fair', () => {
           title: 'Filtered Resource',
           description: '',
           frequency: 'monthly',
-          image: null,
-          keywords: [],
-          schema: {},
-        })
+        } as DataFairDataset)
 
       // Mock first page of filtered data
       const csvLines = 'field1,field2\n2021,abc\n2022,def\n'
       nock(catalogConfig.url)
         .get(linesUrl)
-        .reply(200, csvLines, {
-          'Content-Type': 'text/csv',
-          Link: ''
-        })
+        .reply(200, csvLines, { 'Content-Type': 'text/csv' })
 
       const resource = await getResource(contextWithFilters as any)
 

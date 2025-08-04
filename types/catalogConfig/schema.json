@@ -17,14 +17,33 @@
       "title": "URL",
       "description": "The url of the catalog",
       "x-i18n-description": {
-        "fr": "L'URL du site où le catalogue est publié. *L'URL de l'API utilisée sera* *https*[]()*://example.com***/data-fair/api/v1**"
+        "fr": "L'URL du portail où le catalogue est publié. Par exemple: `https://opendata.koumoul.com`."
       },
       "pattern": "^https?://.*[^/]$",
       "errorMessage": "The URL must start with http:// or https:// and must not end with `/`.",
       "x-i18n-errorMessage": {
         "fr": "L'URL doit commencer par http:// ou https:// et ne pas se terminer par `/`."
       },
-      "examples": ["https://example.com"]
+      "examples": [
+        "https://opendata.koumoul.com"
+      ]
+    },
+    "apiKey": {
+      "type": "string",
+      "title": "API Key (Optional)",
+      "x-i18n-title": {
+        "fr": "Clé API (Optionnelle)"
+      },
+      "description": "The Data Fair API key to access the catalog. You can create one from the 'Settings' tab in Data Fair, under the 'API Keys' section.",
+      "x-i18n-description": {
+        "fr": "La clé API Data Fair pour accéder au catalogue. Vous pouvez en créer depuis l'onglet 'Paramètres' de Data Fair, dans la section 'Clés d'API'."
+      },
+      "layout": {
+        "props": {
+          "type": "password",
+          "autocomplete": "new-password"
+        }
+      }
     }
   }
 }

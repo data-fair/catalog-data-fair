@@ -1,5 +1,5 @@
 {
-  "$id": "https://github.com/data-fair/catalog-data-fair/catlog-schemas",
+  "$id": "https://github.com/data-fair/catalog-data-fair/catalog-schemas",
   "x-exports": [
     "types"
   ],

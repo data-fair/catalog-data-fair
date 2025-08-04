@@ -20,6 +20,7 @@ const prepareCatalog = (dataFairDatasets: DataFairDataset[]): ResourceList => {
       format: 'csv',
       size: dataFairDataset.file?.size ?? dataFairDataset.storage?.size ?? dataFairDataset.originalFile?.size,
       type: 'resource',
+      origin: dataFairDataset.page
     } as ResourceList[number])
   }
   return catalog
@@ -38,8 +39,9 @@ export const listResources = async (config: ListResourcesContext<DataFairConfig,
 
   let data: DataFairCatalog
   const url = `${config.catalogConfig.url}/data-fair/api/v1/catalog/datasets`
+  const headers = config.secrets.apiKey ? { 'x-apiKey': config.secrets.apiKey } : undefined
   try {
-    const res = (await axios.get(url, { params: dataFairParams }))
+    const res = (await axios.get(url, { params: dataFairParams, headers }))
     if (res.status !== 200) {
       throw new Error(`HTTP error : ${res.status}, ${res.data}`)
     }

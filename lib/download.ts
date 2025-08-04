@@ -4,6 +4,7 @@ import axios from '@data-fair/lib-node/axios.js'
 import * as fs from 'fs'
 import { join } from 'path'
 import { Transform } from 'stream'
+import slugify from 'slugify'
 
 /**
  * Retrieves a resource by first fetching its metadata and then downloading the actual resource.
@@ -15,8 +16,8 @@ import { Transform } from 'stream'
 export const getResource = async (context: GetResourceContext<DataFairConfig>): ReturnType<CatalogPlugin['getResource']> => {
   context.log.step('Import de la ressource')
 
-  const resource = await getMetaData(context)
-  resource.filePath = await downloadResource(context, resource)
+  const { resource, file } = await getMetaData(context)
+  resource.filePath = await downloadResource(context, file, resource)
 
   return resource
 }
@@ -27,11 +28,12 @@ export const getResource = async (context: GetResourceContext<DataFairConfig>): 
  * @param resourceId the dataset Id to fetch fields from
  * @returns the Resource corresponding to the id by this configuration
  */
-const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContext<DataFairConfig>): Promise<Resource> => {
+const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResourceContext<DataFairConfig>): Promise<{ resource: Resource, file: boolean }> => {
   let dataset: DataFairDataset
   try {
     const url = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}`
-    const res = (await axios.get(url))
+    const config = secrets.apiKey ? { headers: { 'x-apiKey': secrets.apiKey } } : undefined
+    const res = (await axios.get(url, config))
     if (res.status !== 200) {
       throw new Error(`HTTP error : ${res.status}, ${res.data}`)
     }
@@ -42,6 +44,17 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
     throw new Error(`Erreur lors de la récuperation de la resource DataFair. ${e instanceof Error ? e.message : e}`)
   }
 
+  dataset.schema = (dataset.schema ?? []).map((field) => {
+    if (field['x-extension']) {
+      return {
+        ...field,
+        key: slugify.default(field.key.replace(/^_/, ''), { lower: true, strict: true, replacement: '_' }), // Ensure no leading underscore
+        'x-extension': undefined,   // Remove x-extension property if it exists
+      }
+    }
+    return field
+  })
+
   const resource: Resource = {
     id: resourceId,
     title: dataset.title,
@@ -51,7 +64,7 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
     frequency: dataset.frequency,
     image: dataset.image,
     keywords: dataset.keywords,
-    size: dataset.file?.size,
+    size: dataset.file?.size ?? dataset.storage?.size ?? dataset.originalFile?.size,
     schema: dataset.schema,
     filePath: '',
   }
@@ -62,7 +75,8 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
       href: dataset.license.href ?? '',
     }
   }
-  return resource
+
+  return { resource, file: !!dataset.file }
 }
 
 /**
@@ -72,12 +86,14 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
  * @param res - the metadatas about the resource.
  * @returns A promise resolving to the file path of the downloaded CSV.
  */
-const downloadResource = async (context: GetResourceContext<DataFairConfig>, res: Resource): Promise<string> => {
+const downloadResource = async (context: GetResourceContext<DataFairConfig>, file: boolean, res: Resource): Promise<string> => {
   const filePath = join(context.tmpDir, `${context.resourceId}.csv`)
   try {
-    if (res.size && res.size > 0 && context.importConfig.fields?.length === 0 && context.importConfig.filters?.length === 0) {
+    if (file && !context.importConfig.fields?.length && !context.importConfig.filters?.length) {
+      await context.log.task('downloading', 'Téléchargement en cours... [file]', res.size || NaN)
       await downloadResourceFile(filePath, context)
     } else {
+      await context.log.task('downloading', 'Téléchargement en cours... [lines]', NaN)
       await downloadResourceLines(filePath, context)
     }
     return filePath
@@ -97,29 +113,47 @@ const downloadResource = async (context: GetResourceContext<DataFairConfig>, res
  * @returns A promise that resolves when the file is successfully downloaded and saved.
  * @throws If there is an error writing the file or fetching the dataset.
  */
-const downloadResourceFile = async (filePath: string, { catalogConfig, resourceId, log }: GetResourceContext<DataFairConfig>): Promise<void> => {
+const downloadResourceFile = async (filePath: string, { catalogConfig, resourceId, log, secrets }: GetResourceContext<DataFairConfig>): Promise<void> => {
   const url = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}/full`
-  log.info('Import des données de la ressource', url)
+  const headers = secrets.apiKey ? { 'x-apiKey': secrets.apiKey } : undefined
 
-  const fileStream = fs.createWriteStream(filePath)
-
-  const response = await axios.get(url, { responseType: 'stream' })
+  const response = await axios.get(url, { responseType: 'stream', headers })
 
   if (response.status !== 200) {
     throw new Error(`Error while fetching data: HTTP ${response.statusText}`)
   }
 
+  let downloaded = 0
+  let logPromise: Promise<void> | null = null
+
   return new Promise<void>((resolve, reject) => {
+    const fileStream = fs.createWriteStream(filePath, { encoding: 'binary' }) // Ensure binary encoding
+
+    response.data.on('data', (chunk: Buffer) => {
+      downloaded += chunk.length
+      if (!logPromise) {
+        logPromise = log.progress('downloading', downloaded)
+          .catch(err => console.warn('Progress logging failed:', err))
+          .finally(() => { logPromise = null })
+      }
+    })
+
     response.data.pipe(fileStream)
+
     fileStream.on('finish', () => {
+      fileStream.close()
       resolve()
     })
+
     response.data.on('error', (err: any) => {
-      fs.unlink(filePath, () => { }) // Delete the file in case of error
+      fileStream.destroy()
+      fs.unlink(filePath, () => { })
       reject(err)
     })
+
     fileStream.on('error', (err) => {
-      fs.unlink(filePath, () => { }) // Delete the file in case of error
+      response.data.destroy()
+      fs.unlink(filePath, () => { })
       reject(err)
     })
   })
@@ -135,12 +169,14 @@ const downloadResourceFile = async (filePath: string, { catalogConfig, resourceI
  * @returns A promise that resolves when the file is successfully downloaded and saved.
  * @throws If there is an error writing the file or fetching the dataset.
  */
-const downloadResourceLines = async (destFile: string, { catalogConfig, resourceId, importConfig, log }: GetResourceContext<DataFairConfig> & { importConfig: ImportConfig }) => {
-  let url: string | null = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=3000`
+const downloadResourceLines = async (destFile: string, { catalogConfig, resourceId, importConfig, secrets, log }: GetResourceContext<DataFairConfig> & { importConfig: ImportConfig }) => {
+  let url: string | null = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000`
 
   if (importConfig.fields) {
     url += '&select=' + importConfig.fields.map(field => field.key).join(',')
   }
+
+  const headers = secrets.apiKey ? { 'x-apiKey': secrets.apiKey } : undefined
 
   if (importConfig.filters) {
     importConfig.filters.forEach((filter) => {
@@ -160,13 +196,15 @@ const downloadResourceLines = async (destFile: string, { catalogConfig, resource
     })
   }
 
-  log.info('Import des données de la ressource', url)
+  let downloaded = 0
+  let pendingLogPromise: Promise<void> | null = null
+
   const writer = fs.createWriteStream(destFile)
   let isFirstChunk = true
 
   while (url) {
-    console.log(url)
-    const response = await axios.get(url, { responseType: 'stream' })
+    console.log(`Fetching data from ${url}`)
+    const response = await axios.get(url, { responseType: 'stream', headers })
     if (response.status !== 200) {
       throw new Error(`Error while fetching data: HTTP ${response.statusText}`)
     }
@@ -189,6 +227,18 @@ const downloadResourceLines = async (destFile: string, { catalogConfig, resource
           }
         }))
       }
+
+      stream.on('data', (chunk: Buffer) => {
+        downloaded += chunk.length
+
+        // Only start a new log promise if there isn't one already running
+        if (!pendingLogPromise) {
+          pendingLogPromise = log.progress('downloading', downloaded)
+            .catch(err => console.warn('Progress logging failed:', err))
+            .finally(() => { pendingLogPromise = null })
+        }
+      })
+
       stream.pipe(writer, { end: false })
       stream.on('end', () => {
         const linkHeader = response.headers.link
