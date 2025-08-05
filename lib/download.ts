@@ -90,7 +90,7 @@ const downloadResource = async (context: GetResourceContext<DataFairConfig>, fil
   const filePath = join(context.tmpDir, `${context.resourceId}.csv`)
   try {
     if (file && !context.importConfig.fields?.length && !context.importConfig.filters?.length) {
-      await context.log.task('downloading', 'Téléchargement en cours...', res.size || NaN)
+      await context.log.task('downloading', 'Téléchargement en cours...  (taille approximative)', res.size || NaN)
       await downloadResourceFile(filePath, context)
     } else {
       await context.log.task('downloading', 'Téléchargement en cours...', NaN)
