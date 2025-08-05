@@ -90,10 +90,10 @@ const downloadResource = async (context: GetResourceContext<DataFairConfig>, fil
   const filePath = join(context.tmpDir, `${context.resourceId}.csv`)
   try {
     if (file && !context.importConfig.fields?.length && !context.importConfig.filters?.length) {
-      await context.log.task('downloading', 'Téléchargement en cours... [file]', res.size || NaN)
+      await context.log.task('downloading', 'Téléchargement en cours...', res.size || NaN)
       await downloadResourceFile(filePath, context)
     } else {
-      await context.log.task('downloading', 'Téléchargement en cours... [lines]', NaN)
+      await context.log.task('downloading', 'Téléchargement en cours...', NaN)
       await downloadResourceLines(filePath, context)
     }
     return filePath
@@ -203,7 +203,6 @@ const downloadResourceLines = async (destFile: string, { catalogConfig, resource
   let isFirstChunk = true
 
   while (url) {
-    console.log(`Fetching data from ${url}`)
     const response = await axios.get(url, { responseType: 'stream', headers })
     if (response.status !== 200) {
       throw new Error(`Error while fetching data: HTTP ${response.statusText}`)
