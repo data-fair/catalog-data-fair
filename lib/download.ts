@@ -55,16 +55,23 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
     return field
   })
 
+  let size: number | undefined
+  if (dataset.storage?.dataFiles && dataset.storage.dataFiles.length > 0) {
+    // get the last elt of the array to get the /full file size
+    const lastFile = dataset.storage.dataFiles[dataset.storage.dataFiles.length - 1]
+    size = lastFile.size
+  }
+
   const resource: Resource = {
     id: resourceId,
     title: dataset.title,
     description: dataset.description,
     format: 'csv',
-    origin: `${catalogConfig.url}/datasets/${resourceId}`,
+    origin: dataset.page,
     frequency: dataset.frequency,
     image: dataset.image,
     keywords: dataset.keywords,
-    size: dataset.file?.size ?? dataset.storage?.size ?? dataset.originalFile?.size,
+    size,
     schema: dataset.schema,
     filePath: '',
   }
@@ -90,7 +97,7 @@ const downloadResource = async (context: GetResourceContext<DataFairConfig>, fil
   const filePath = join(context.tmpDir, `${context.resourceId}.csv`)
   try {
     if (file && !context.importConfig.fields?.length && !context.importConfig.filters?.length) {
-      await context.log.task('downloading', 'Téléchargement en cours...  (taille approximative)', res.size || NaN)
+      await context.log.task('downloading', 'Téléchargement en cours...', res.size || NaN)
       await downloadResourceFile(filePath, context)
     } else {
       await context.log.task('downloading', 'Téléchargement en cours...', NaN)
@@ -124,17 +131,19 @@ const downloadResourceFile = async (filePath: string, { catalogConfig, resourceI
   }
 
   let downloaded = 0
-  let logPromise: Promise<void> | null = null
+  let lastLogTime = Date.now()
+  const logInterval = 500 // ms
 
-  return new Promise<void>((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     const fileStream = fs.createWriteStream(filePath, { encoding: 'binary' }) // Ensure binary encoding
 
     response.data.on('data', (chunk: Buffer) => {
       downloaded += chunk.length
-      if (!logPromise) {
-        logPromise = log.progress('downloading', downloaded)
+      const now = Date.now()
+      if (now - lastLogTime > logInterval) {
+        lastLogTime = now
+        log.progress('downloading', downloaded)
           .catch(err => console.warn('Progress logging failed:', err))
-          .finally(() => { logPromise = null })
       }
     })
 
@@ -157,6 +166,8 @@ const downloadResourceFile = async (filePath: string, { catalogConfig, resourceI
       reject(err)
     })
   })
+
+  await log.progress('downloading', downloaded, downloaded)
 }
 
 /**
@@ -169,7 +180,7 @@ const downloadResourceFile = async (filePath: string, { catalogConfig, resourceI
  * @returns A promise that resolves when the file is successfully downloaded and saved.
  * @throws If there is an error writing the file or fetching the dataset.
  */
-const downloadResourceLines = async (destFile: string, { catalogConfig, resourceId, importConfig, secrets, log }: GetResourceContext<DataFairConfig> & { importConfig: ImportConfig }) => {
+const downloadResourceLines = async (destFile: string, { catalogConfig, resourceId, importConfig, secrets, log }: GetResourceContext<DataFairConfig> & { importConfig: ImportConfig }): Promise<void> => {
   let url: string | null = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000`
 
   if (importConfig.fields) {
@@ -252,6 +263,7 @@ const downloadResourceLines = async (destFile: string, { catalogConfig, resource
       })
     })
   }
+  await log.progress('downloading', downloaded, downloaded)
   writer.end()
 }
 

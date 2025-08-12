@@ -29,6 +29,7 @@
         }
       },
       "layout": {
+        "density": "compact",
         "getItems": {
           "url": "${context.catalogConfig.url}/data-fair/api/v1/datasets/${context.resourceId}/schema?calculated=false",
           "itemTitle": "item.label",

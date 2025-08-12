@@ -14,11 +14,16 @@ const prepareCatalog = (dataFairDatasets: DataFairDataset[]): ResourceList => {
   const catalog: ResourceList = []
 
   for (const dataFairDataset of dataFairDatasets) {
+    let size: number | undefined
+    if (dataFairDataset.storage?.dataFiles && dataFairDataset.storage.dataFiles.length > 0) {
+      const lastFile = dataFairDataset.storage.dataFiles[dataFairDataset.storage.dataFiles.length - 1]
+      size = lastFile.size
+    }
     catalog.push({
       id: dataFairDataset.id,
       title: dataFairDataset.title,
       format: 'csv',
-      size: dataFairDataset.file?.size ?? dataFairDataset.storage?.size ?? dataFairDataset.originalFile?.size,
+      size,
       type: 'resource',
       origin: dataFairDataset.page
     } as ResourceList[number])
@@ -42,7 +47,7 @@ export const listResources = async (config: ListResourcesContext<DataFairConfig,
   const headers = config.secrets.apiKey ? { 'x-apiKey': config.secrets.apiKey } : undefined
   try {
     const res = (await axios.get(url, { params: dataFairParams, headers }))
-    if (res.status !== 200) {
+    if (res.status !== 200 || typeof res.data !== 'object') {
       throw new Error(`HTTP error : ${res.status}, ${res.data}`)
     }
     data = res.data
