@@ -6,7 +6,6 @@ import type { DataFairCapabilities } from './capabilities.ts'
 type ResourceList = Awaited<ReturnType<CatalogPlugin['listResources']>>['results']
 
 /**
- * Transform an ODS catalog into a Data Fair catalog
  * @param dataFairDataset the dataset to transform
  * @returns an object containing the count of resources, the transformed resources, and an empty path array
  */
@@ -37,7 +36,7 @@ const prepareCatalog = (dataFairDatasets: DataFairDataset[]): ResourceList => {
  * @returns the list of Resources available on this catalog
  */
 export const listResources = async (config: ListResourcesContext<DataFairConfig, DataFairCapabilities>): ReturnType<CatalogPlugin<DataFairConfig>['listResources']> => {
-  const dataFairParams: Record<string, any> = {}
+  const dataFairParams: Record<string, any> = { sort: 'title' }
   if (config.params?.q) dataFairParams.q = config.params.q
   if (config.params?.size) dataFairParams.size = config.params.size
   if (config.params?.page) dataFairParams.page = config.params.page

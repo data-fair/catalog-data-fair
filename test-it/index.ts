@@ -66,7 +66,7 @@ describe('catalog-data-fair', () => {
      */
     it('should list resources', async () => {
       nock('https://example.com')
-        .get('/data-fair/api/v1/catalog/datasets?size=2&page=10')
+        .get('/data-fair/api/v1/catalog/datasets?sort=title&size=2&page=10')
         .reply(200, { count: 10, results: resources })
 
       const res = await catalogPlugin.listResources({
@@ -91,7 +91,7 @@ describe('catalog-data-fair', () => {
      */
     it('should list with api key', async () => {
       nock('https://example.com')
-        .get('/data-fair/api/v1/catalog/datasets?size=2&page=10')
+        .get('/data-fair/api/v1/catalog/datasets?sort=title&size=2&page=10')
         .matchHeader('x-apiKey', 'testApiKey')
         .reply(200, { count: 10, results: resources })
 
@@ -116,7 +116,7 @@ describe('catalog-data-fair', () => {
      */
     it('should fail for resource not found', async () => {
       nock('https://testErr')
-        .get('/data-fair/api/v1/catalog/datasets').reply(404, { error: 'Not Found' })
+        .get('/data-fair/api/v1/catalog/datasets?sort=title').reply(404, { error: 'Not Found' })
 
       await assert.rejects(
         async () => {
@@ -139,7 +139,7 @@ describe('catalog-data-fair', () => {
      */
     it('should handle search query parameter', async () => {
       nock('https://example.com')
-        .get('/data-fair/api/v1/catalog/datasets?q=test&size=10')
+        .get('/data-fair/api/v1/catalog/datasets?sort=title&q=test&size=10')
         .reply(200, { count: 1, results: [resources[0]] })
 
       const res = await catalogPlugin.listResources({
@@ -161,7 +161,7 @@ describe('catalog-data-fair', () => {
      */
     it('should handle empty results', async () => {
       nock('https://example.com')
-        .get('/data-fair/api/v1/catalog/datasets')
+        .get('/data-fair/api/v1/catalog/datasets?sort=title')
         .reply(200, { count: 0, results: [] })
 
       const res = await catalogPlugin.listResources({
@@ -183,7 +183,7 @@ describe('catalog-data-fair', () => {
      */
     it('should handle network errors', async () => {
       nock('https://example.com')
-        .get('/data-fair/api/v1/catalog/datasets')
+        .get('/data-fair/api/v1/catalog/datasets?sort=title')
         .replyWithError('Network error')
 
       await assert.rejects(
@@ -207,7 +207,7 @@ describe('catalog-data-fair', () => {
      */
     it('should handle HTTP errors (500)', async () => {
       nock('https://example.com')
-        .get('/data-fair/api/v1/catalog/datasets')
+        .get('/data-fair/api/v1/catalog/datasets?sort=title')
         .reply(500, { error: 'Internal Server Error' })
 
       await assert.rejects(
@@ -243,7 +243,7 @@ describe('catalog-data-fair', () => {
       }]
 
       nock('https://example.com')
-        .get('/data-fair/api/v1/catalog/datasets')
+        .get('/data-fair/api/v1/catalog/datasets?sort=title')
         .reply(200, { count: 2, results: noSizeResources })
 
       const res = await catalogPlugin.listResources({
@@ -341,7 +341,7 @@ describe('catalog-data-fair', () => {
       }
 
       const metaUrl = `/data-fair/api/v1/datasets/${resourceId}`
-      const linesUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000`
+      const linesUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000`
       // Mock metadata request
       nock(catalogConfig.url)
         .get(metaUrl)
@@ -388,7 +388,7 @@ describe('catalog-data-fair', () => {
       }
 
       const metaUrl = `/data-fair/api/v1/datasets/${resourceId}`
-      const linesUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000&select=field1,field2&year_gte=2020`
+      const linesUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000&select=field1,field2&year_gte=2020`
       // Mock metadata
       nock(catalogConfig.url)
         .get(metaUrl)
@@ -540,16 +540,16 @@ describe('catalog-data-fair', () => {
       // Mock first page
       const firstPageData = 'col1,col2\nval1,val2\n'
       nock(catalogConfig.url)
-        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000`)
+        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000`)
         .reply(200, firstPageData, {
           'Content-Type': 'text/csv',
-          link: '<https://example.com/data-fair/api/v1/datasets/paginated-resource/lines?format=csv&size=5000&after=12>; rel=next'
+          link: '<https://example.com/data-fair/api/v1/datasets/paginated-resource/lines?format=csv&size=10000&after=12>; rel=next'
         })
 
       // Mock second page
       const secondPageData = 'col1,col2\nval3,val4\n'
       nock(catalogConfig.url)
-        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000&after=12`)
+        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000&after=12`)
         .reply(200, secondPageData, { 'Content-Type': 'text/csv' })
 
       const resource = await getResource(downloadContext as any)
@@ -587,7 +587,7 @@ describe('catalog-data-fair', () => {
           title: 'Filtered Resource'
         })
 
-      const expectedUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000&status_in="active","pending"&category_nin="archived"&name_starts=test`
+      const expectedUrl = `/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000&status_in="active","pending"&category_nin="archived"&name_starts=test`
       nock(catalogConfig.url)
         .get(expectedUrl)
         .reply(200, 'name,status,category\ntest1,active,main\n', { 'Content-Type': 'text/csv' })
@@ -631,7 +631,7 @@ describe('catalog-data-fair', () => {
         })
 
       nock(catalogConfig.url)
-        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000`)
+        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000`)
         .reply(200, 'field1\n"45.123,2.456"\n', { 'Content-Type': 'text/csv' })
 
       const resource = await getResource(downloadContext as any)
@@ -670,7 +670,7 @@ describe('catalog-data-fair', () => {
   describe('test edge cases and error handling', () => {
     it('should handle malformed JSON responses', async () => {
       nock('https://example.com')
-        .get('/data-fair/api/v1/catalog/datasets')
+        .get('/data-fair/api/v1/catalog/datasets?sort=title')
         .reply(200, 'invalid json')
 
       await assert.rejects(

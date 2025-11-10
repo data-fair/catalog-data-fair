@@ -181,7 +181,7 @@ const downloadResourceFile = async (filePath: string, { catalogConfig, resourceI
  * @throws If there is an error writing the file or fetching the dataset.
  */
 const downloadResourceLines = async (destFile: string, { catalogConfig, resourceId, importConfig, secrets, log }: GetResourceContext<DataFairConfig> & { importConfig: ImportConfig }): Promise<void> => {
-  let url: string | null = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=5000`
+  let url: string | null = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000`
 
   if (importConfig.fields) {
     url += '&select=' + importConfig.fields.map(field => field.key).join(',')
