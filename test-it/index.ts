@@ -1,5 +1,5 @@
 import type { DataFairConfig, DataFairDataset, ImportConfig } from '#types'
-import type { CatalogPlugin, GetResourceContext, ListResourcesContext } from '@data-fair/types-catalogs'
+import type { CatalogPlugin, GetResourceContext, ListContext } from '@data-fair/types-catalogs'
 import plugin from '../index.ts'
 import type { DataFairCapabilities } from '../lib/capabilities.ts'
 import { getResource } from '../lib/download.ts'
@@ -18,16 +18,16 @@ const catalogConfig: DataFairConfig = {
 }
 
 describe('catalog-data-fair', () => {
-  const context: ListResourcesContext<DataFairConfig, DataFairCapabilities> = {
+  const context: ListContext<DataFairConfig, DataFairCapabilities> = {
     catalogConfig,
     params: {},
     secrets: {}
   }
 
   /**
-   * Test suite for the listResources functionality
+   * Test suite for the list functionality
    *
-   * The listResources function is responsible for:
+   * The list function is responsible for:
    * - Fetching available datasets from a Data Fair instance
    * - Supporting pagination through page/size parameters
    * - Handling search queries via the 'q' parameter
@@ -69,7 +69,7 @@ describe('catalog-data-fair', () => {
         .get('/data-fair/api/v1/catalog/datasets?sort=title&size=2&page=10')
         .reply(200, { count: 10, results: resources })
 
-      const res = await catalogPlugin.listResources({
+      const res = await catalogPlugin.list({
         catalogConfig,
         secrets: {},
         params: { page: 10, size: 2 }
@@ -95,7 +95,7 @@ describe('catalog-data-fair', () => {
         .matchHeader('x-apiKey', 'testApiKey')
         .reply(200, { count: 10, results: resources })
 
-      const res = await catalogPlugin.listResources({
+      const res = await catalogPlugin.list({
         catalogConfig: { ...catalogConfig, apiKey: '********' },
         secrets: { apiKey: 'testApiKey' },
         params: { page: 10, size: 2 }
@@ -120,11 +120,11 @@ describe('catalog-data-fair', () => {
 
       await assert.rejects(
         async () => {
-          await catalogPlugin.listResources({
+          await catalogPlugin.list({
             catalogConfig: { url: 'https://testErr' },
             secrets: {},
             params: {}
-          } as ListResourcesContext<DataFairConfig, DataFairCapabilities>)
+          } as ListContext<DataFairConfig, DataFairCapabilities>)
         },
         /Erreur lors de la récuperation de la resource Data Fair|Not Found/i,
         'Should throw an error for non-existent resource'
@@ -142,7 +142,7 @@ describe('catalog-data-fair', () => {
         .get('/data-fair/api/v1/catalog/datasets?sort=title&q=test&size=10')
         .reply(200, { count: 1, results: [resources[0]] })
 
-      const res = await catalogPlugin.listResources({
+      const res = await catalogPlugin.list({
         catalogConfig,
         secrets: {},
         params: { q: 'test', size: 10 }
@@ -164,7 +164,7 @@ describe('catalog-data-fair', () => {
         .get('/data-fair/api/v1/catalog/datasets?sort=title')
         .reply(200, { count: 0, results: [] })
 
-      const res = await catalogPlugin.listResources({
+      const res = await catalogPlugin.list({
         catalogConfig,
         secrets: {},
         params: {}
@@ -188,7 +188,7 @@ describe('catalog-data-fair', () => {
 
       await assert.rejects(
         async () => {
-          await catalogPlugin.listResources({
+          await catalogPlugin.list({
             catalogConfig,
             secrets: {},
             params: {}
@@ -212,7 +212,7 @@ describe('catalog-data-fair', () => {
 
       await assert.rejects(
         async () => {
-          await catalogPlugin.listResources({
+          await catalogPlugin.list({
             catalogConfig,
             secrets: {},
             params: {}
@@ -246,7 +246,7 @@ describe('catalog-data-fair', () => {
         .get('/data-fair/api/v1/catalog/datasets?sort=title')
         .reply(200, { count: 2, results: noSizeResources })
 
-      const res = await catalogPlugin.listResources({
+      const res = await catalogPlugin.list({
         catalogConfig,
         secrets: {},
         params: {}
@@ -285,6 +285,7 @@ describe('catalog-data-fair', () => {
         resourceId,
         secrets: {},
         importConfig: {},
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -336,6 +337,7 @@ describe('catalog-data-fair', () => {
         resourceId,
         secrets: { apiKey: 'testApiKey' },
         importConfig: {},
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -383,6 +385,7 @@ describe('catalog-data-fair', () => {
           fields: [{ key: 'field1' }, { key: 'field2' }],
           filters: [{ field: { key: 'year' }, type: 'gte', value: '2020' }]
         },
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -428,6 +431,7 @@ describe('catalog-data-fair', () => {
         resourceId,
         secrets: {},
         importConfig: {},
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -456,6 +460,7 @@ describe('catalog-data-fair', () => {
         resourceId,
         secrets: {},
         importConfig: {},
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -488,6 +493,7 @@ describe('catalog-data-fair', () => {
         resourceId,
         secrets: {},
         importConfig: {},
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -525,6 +531,7 @@ describe('catalog-data-fair', () => {
         resourceId,
         secrets: {},
         importConfig: {},
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -576,6 +583,7 @@ describe('catalog-data-fair', () => {
             { field: { key: 'name' }, type: 'starts', value: 'test' }
           ]
         } as ImportConfig,
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -608,6 +616,7 @@ describe('catalog-data-fair', () => {
         resourceId,
         secrets: {},
         importConfig: {},
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       }
@@ -675,7 +684,7 @@ describe('catalog-data-fair', () => {
 
       await assert.rejects(
         async () => {
-          await catalogPlugin.listResources({
+          await catalogPlugin.list({
             catalogConfig,
             secrets: {},
             params: {}

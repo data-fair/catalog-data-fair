@@ -1,9 +1,9 @@
 import type { DataFairCatalog, DataFairDataset, DataFairConfig } from '#types'
 import axios from '@data-fair/lib-node/axios.js'
-import type { CatalogPlugin, ListResourcesContext } from '@data-fair/types-catalogs'
+import type { CatalogPlugin, ListContext } from '@data-fair/types-catalogs'
 import type { DataFairCapabilities } from './capabilities.ts'
 
-type ResourceList = Awaited<ReturnType<CatalogPlugin['listResources']>>['results']
+type ResourceList = Awaited<ReturnType<CatalogPlugin['list']>>['results']
 
 /**
  * @param dataFairDataset the dataset to transform
@@ -35,7 +35,7 @@ const prepareCatalog = (dataFairDatasets: DataFairDataset[]): ResourceList => {
  * @param config the Data Fair configuration
  * @returns the list of Resources available on this catalog
  */
-export const listResources = async (config: ListResourcesContext<DataFairConfig, DataFairCapabilities>): ReturnType<CatalogPlugin<DataFairConfig>['listResources']> => {
+export const listResources = async (config: ListContext<DataFairConfig, DataFairCapabilities>): ReturnType<CatalogPlugin<DataFairConfig>['list']> => {
   const dataFairParams: Record<string, any> = { sort: 'title' }
   if (config.params?.q) dataFairParams.q = config.params.q
   if (config.params?.size) dataFairParams.size = config.params.size

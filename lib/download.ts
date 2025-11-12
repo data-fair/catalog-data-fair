@@ -71,6 +71,8 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
     frequency: dataset.frequency,
     image: dataset.image,
     keywords: dataset.keywords,
+    analysis: dataset.analysis,
+    projection: dataset.projection,
     size,
     schema: dataset.schema,
     filePath: '',
