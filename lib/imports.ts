@@ -52,7 +52,7 @@ export const listResources = async (config: ListContext<DataFairConfig, DataFair
     data = res.data
   } catch (e) {
     console.error(`Error fetching datasets from ${url} : ${e}`)
-    throw new Error(`Erreur lors de la récuperation de la resource Data Fair (${e instanceof Error ? e.message : ''})`)
+    throw new Error(`Erreur lors de la récupération de la resource Data Fair (${e instanceof Error ? e.message : ''})`)
   }
 
   const catalog = prepareCatalog(data.results)

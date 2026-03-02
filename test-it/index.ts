@@ -126,7 +126,7 @@ describe('catalog-data-fair', () => {
             params: {}
           } as ListContext<DataFairConfig, DataFairCapabilities>)
         },
-        /Erreur lors de la récuperation de la resource Data Fair|Not Found/i,
+        /Erreur lors de la récupération de la resource Data Fair|Not Found/i,
         'Should throw an error for non-existent resource'
       )
     })
@@ -194,7 +194,7 @@ describe('catalog-data-fair', () => {
             params: {}
           })
         },
-        /Erreur lors de la récuperation de la resource Data Fair/i,
+        /Erreur lors de la récupération de la resource Data Fair/i,
         'Should throw an error for network issues'
       )
     })
@@ -218,7 +218,7 @@ describe('catalog-data-fair', () => {
             params: {}
           })
         },
-        /HTTP error|Erreur lors de la récuperation de la resource Data Fair/i,
+        /HTTP error|Erreur lors de la récupération de la resource Data Fair/i,
         'Should throw an error for HTTP 500'
       )
     })
@@ -442,7 +442,7 @@ describe('catalog-data-fair', () => {
 
       await assert.rejects(
         async () => await getResource(downloadContext as any),
-        /Erreur lors de la récuperation de la resource DataFair/i,
+        /Erreur lors de la récupération de la resource DataFair/i,
         'Should throw error when metadata fetch fails'
       )
     })
@@ -690,7 +690,7 @@ describe('catalog-data-fair', () => {
             params: {}
           })
         },
-        /Erreur lors de la récuperation de la resource Data Fair/i,
+        /Erreur lors de la récupération de la resource Data Fair/i,
         'Should handle malformed JSON'
       )
     })

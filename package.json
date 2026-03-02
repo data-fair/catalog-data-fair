@@ -1,6 +1,6 @@
 {
   "name": "@data-fair/catalog-data-fair",
-  "description": "A simple Data Fair plugin for the Data Fair catalogs service.",
+  "description": "Data Fair plugin for the Data Fair catalogs service.",
   "version": "0.2.3",
   "main": "index.ts",
   "type": "module",

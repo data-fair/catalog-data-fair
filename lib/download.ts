@@ -41,7 +41,7 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
     log.info('Import des métadonnées de la ressource', { url })
   } catch (e) {
     console.error('Error while fetching metadatas', e)
-    throw new Error(`Erreur lors de la récuperation de la resource DataFair. ${e instanceof Error ? e.message : e}`)
+    throw new Error(`Erreur lors de la récupération de la resource DataFair. ${e instanceof Error ? e.message : e}`)
   }
 
   dataset.schema = (dataset.schema ?? []).map((field) => {
