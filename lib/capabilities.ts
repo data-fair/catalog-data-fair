@@ -11,7 +11,6 @@ export const capabilities = [
   'search',
   'pagination',
   'importConfig',
-  'thumbnail',
 ] satisfies Capability[]
 
 export type DataFairCapabilities = typeof capabilities

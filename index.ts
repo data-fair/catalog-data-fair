@@ -23,9 +23,7 @@ const plugin: CatalogPlugin<DataFairConfig, DataFairCapabilities> = {
   },
 
   metadata: {
-    title: 'Catalog Data Fair',
-    description: 'Data Fair plugin for Data Fair Catalog',
-    thumbnailPath: './lib/resources/thumbnail.svg',
+    title: 'Data Fair',
     capabilities
   },
 

@@ -660,13 +660,10 @@ describe('catalog-data-fair', () => {
       assert.ok(capabilities.includes('search'), 'Should support search')
       assert.ok(capabilities.includes('pagination'), 'Should support pagination')
       assert.ok(capabilities.includes('importConfig'), 'Should support importConfig')
-      assert.ok(capabilities.includes('thumbnail'), 'Should support thumbnail')
     })
 
     it('should have correct metadata', () => {
-      assert.strictEqual(catalogPlugin.metadata?.title, 'Catalog Data Fair')
-      assert.strictEqual(catalogPlugin.metadata?.description, 'Data Fair plugin for Data Fair Catalog')
-      assert.ok(catalogPlugin.metadata?.thumbnailPath, 'Should have thumbnail path')
+      assert.strictEqual(catalogPlugin.metadata?.title, 'Data Fair')
     })
 
     it('should have schema definitions', () => {

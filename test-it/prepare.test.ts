@@ -32,7 +32,7 @@ describe('catalog-data-fair prepare function', () => {
       const context: PrepareContext<DataFairConfig, DataFairCapabilities> = {
         catalogConfig,
         secrets: {},
-        capabilities: ['import', 'search', 'pagination', 'importConfig', 'thumbnail']
+        capabilities: ['import', 'search', 'pagination', 'importConfig']
       }
 
       // Mock the test endpoint call made by prepare
@@ -53,7 +53,7 @@ describe('catalog-data-fair prepare function', () => {
       const context: PrepareContext<DataFairConfig, DataFairCapabilities> = {
         catalogConfig: { ...catalogConfig, apiKey: 'testApiKey' },
         secrets: {},
-        capabilities: ['import', 'search', 'pagination', 'importConfig', 'thumbnail']
+        capabilities: ['import', 'search', 'pagination', 'importConfig']
       }
 
       // Mock the connectivity test endpoint with API key validation
@@ -76,7 +76,7 @@ describe('catalog-data-fair prepare function', () => {
       const context: PrepareContext<DataFairConfig, DataFairCapabilities> = {
         catalogConfig: { url: 'https://invalid-url.example' },
         secrets: {},
-        capabilities: ['import', 'search', 'pagination', 'importConfig', 'thumbnail']
+        capabilities: ['import', 'search', 'pagination', 'importConfig']
       }
 
       // Mock a failing prepare endpoint
@@ -97,7 +97,7 @@ describe('catalog-data-fair prepare function', () => {
       const context: PrepareContext<DataFairConfig, DataFairCapabilities> = {
         catalogConfig: { url: '' },
         secrets: {},
-        capabilities: ['import', 'search', 'pagination', 'importConfig', 'thumbnail']
+        capabilities: ['import', 'search', 'pagination', 'importConfig']
       }
 
       await assert.rejects(
@@ -113,7 +113,7 @@ describe('catalog-data-fair prepare function', () => {
       const context: PrepareContext<DataFairConfig, DataFairCapabilities> = {
         catalogConfig,
         secrets: {},
-        capabilities: ['import', 'search', 'pagination', 'importConfig', 'thumbnail']
+        capabilities: ['import', 'search', 'pagination', 'importConfig']
       }
 
       // Mock network error
@@ -134,7 +134,7 @@ describe('catalog-data-fair prepare function', () => {
       const context: PrepareContext<DataFairConfig, DataFairCapabilities> = {
         catalogConfig: { ...catalogConfig, apiKey: '' },
         secrets: { apiKey: 'oldApiKey' },
-        capabilities: ['import', 'search', 'pagination', 'importConfig', 'thumbnail']
+        capabilities: ['import', 'search', 'pagination', 'importConfig']
       }
 
       nock('https://example.com')
