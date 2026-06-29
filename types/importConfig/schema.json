@@ -5,15 +5,24 @@
     "validate",
     "schema"
   ],
-  "title": "Configuration de l'import",
+  "title": "Import configuration",
+  "x-i18n-title": {
+    "fr": "Configuration de l'import"
+  },
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "fields": {
       "type": "array",
       "default": [],
-      "title": "Colonnes du jeu de données",
-      "description": "La liste des colonnes à importer. Si ce champ est vide, toutes les colonnes seront importées.",
+      "title": "Dataset columns",
+      "x-i18n-title": {
+        "fr": "Colonnes du jeu de données"
+      },
+      "description": "The list of columns to import. If this field is empty, all columns will be imported.",
+      "x-i18n-description": {
+        "fr": "La liste des colonnes à importer. Si ce champ est vide, toutes les colonnes seront importées."
+      },
       "items": {
         "type": "object",
         "properties": {
@@ -43,7 +52,10 @@
   },
   "$defs": {
     "filters": {
-      "title": "Filtres prédéfinis",
+      "title": "Predefined filters",
+      "x-i18n-title": {
+        "fr": "Filtres prédéfinis"
+      },
       "type": "array",
       "default": [],
       "items": {
@@ -56,7 +68,10 @@
         ],
         "oneOf": [
           {
-            "title": "Restreindre à des valeurs précises",
+            "title": "Restrict to specific values",
+            "x-i18n-title": {
+              "fr": "Restreindre à des valeurs précises"
+            },
             "required": [
               "field",
               "values",
@@ -71,8 +86,14 @@
               },
               "values": {
                 "type": "array",
-                "title": "Valeurs",
-                "description": "Importe seulement des lignes où la valeur du champ indiqué est égale à l'une des valeurs renseignées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "title": "Values",
+                "x-i18n-title": {
+                  "fr": "Valeurs"
+                },
+                "description": "Imports only rows where the value of the indicated field is equal to one of the entered values.<br>*Not all values may be displayed, type to search for a specific field.*",
+                "x-i18n-description": {
+                  "fr": "Importe seulement des lignes où la valeur du champ indiqué est égale à l'une des valeurs renseignées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*"
+                },
                 "items": {
                   "type": "string"
                 },
@@ -89,7 +110,10 @@
             }
           },
           {
-            "title": "Exclure des valeurs",
+            "title": "Exclude values",
+            "x-i18n-title": {
+              "fr": "Exclure des valeurs"
+            },
             "required": [
               "field",
               "values",
@@ -104,8 +128,14 @@
               },
               "values": {
                 "type": "array",
-                "title": "Valeurs à exclure",
-                "description": "Importe seulement des lignes où la valeur du champ indiqué est différente des valeurs renseignées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "title": "Values to exclude",
+                "x-i18n-title": {
+                  "fr": "Valeurs à exclure"
+                },
+                "description": "Imports only rows where the value of the indicated field differs from the entered values.<br>*Not all values may be displayed, type to search for a specific field.*",
+                "x-i18n-description": {
+                  "fr": "Importe seulement des lignes où la valeur du champ indiqué est différente des valeurs renseignées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*"
+                },
                 "items": {
                   "type": "string"
                 },
@@ -122,7 +152,10 @@
             }
           },
           {
-            "title": "Supérieur à une valeur",
+            "title": "Greater than a value",
+            "x-i18n-title": {
+              "fr": "Supérieur à une valeur"
+            },
             "required": [
               "field",
               "value",
@@ -137,8 +170,14 @@
               },
               "value": {
                 "type": "string",
-                "title": "Valeur minimale",
-                "description": "Importe seulement des lignes où la valeur du champ indiqué est supérieur ou égale à la valeur renseignée. La valeur peut être un nombre, une chaîne de caractère (*ordre alphanumérique*), une date.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "title": "Minimum value",
+                "x-i18n-title": {
+                  "fr": "Valeur minimale"
+                },
+                "description": "Imports only rows where the value of the indicated field is greater than or equal to the entered value. The value can be a number, a string (*alphanumeric order*), or a date.<br>*Not all values may be displayed, type to search for a specific field.*",
+                "x-i18n-description": {
+                  "fr": "Importe seulement des lignes où la valeur du champ indiqué est supérieur ou égale à la valeur renseignée. La valeur peut être un nombre, une chaîne de caractère (*ordre alphanumérique*), une date.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*"
+                },
                 "layout": {
                   "comp": "combobox",
                   "getItems": {
@@ -149,7 +188,10 @@
             }
           },
           {
-            "title": "Inférieur à une valeur",
+            "title": "Less than a value",
+            "x-i18n-title": {
+              "fr": "Inférieur à une valeur"
+            },
             "required": [
               "field",
               "value",
@@ -164,8 +206,14 @@
               },
               "value": {
                 "type": "string",
-                "title": "Valeur maximale",
-                "description": "Importe seulement les lignes où la valeur du champ indiqué est inférieur à la valeur renseignée. La valeur peut être un nombre, une chaîne de caractère (*ordre alphanumérique*), une date.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
+                "title": "Maximum value",
+                "x-i18n-title": {
+                  "fr": "Valeur maximale"
+                },
+                "description": "Imports only rows where the value of the indicated field is lower than the entered value. The value can be a number, a string (*alphanumeric order*), or a date.<br>*Not all values may be displayed, type to search for a specific field.*",
+                "x-i18n-description": {
+                  "fr": "Importe seulement les lignes où la valeur du champ indiqué est inférieur à la valeur renseignée. La valeur peut être un nombre, une chaîne de caractère (*ordre alphanumérique*), une date.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*"
+                },
                 "layout": {
                   "comp": "combobox",
                   "getItems": {
@@ -176,7 +224,10 @@
             }
           },
           {
-            "title": "Commence par les caractères",
+            "title": "Starts with characters",
+            "x-i18n-title": {
+              "fr": "Commence par les caractères"
+            },
             "required": [
               "field",
               "value",
@@ -191,8 +242,14 @@
               },
               "value": {
                 "type": "string",
-                "description": "Importe seulement les lignes où le champ (colonne) indiqué commence par une chaîne de caractères précise. La chaîne de caractères est sensible à la casse.<br>Seuls les champs (colonnes) ayant pour valeurs des chaînes de caractères sont acceptées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*",
-                "title": "Commence par les caractères",
+                "description": "Imports only rows where the indicated field (column) starts with a specific string. The string is case-sensitive.<br>Only fields (columns) whose values are strings are accepted.<br>*Not all values may be displayed, type to search for a specific field.*",
+                "x-i18n-description": {
+                  "fr": "Importe seulement les lignes où le champ (colonne) indiqué commence par une chaîne de caractères précise. La chaîne de caractères est sensible à la casse.<br>Seuls les champs (colonnes) ayant pour valeurs des chaînes de caractères sont acceptées.<br>*Toutes les valeurs peuvent ne pas être affichées, écrivez pour rechercher un champ particulier.*"
+                },
+                "title": "Starts with characters",
+                "x-i18n-title": {
+                  "fr": "Commence par les caractères"
+                },
                 "layout": {
                   "comp": "combobox",
                   "getItems": {
@@ -207,7 +264,10 @@
     },
     "filterField": {
       "type": "object",
-      "title": "Colonne de filtre",
+      "title": "Filter column",
+      "x-i18n-title": {
+        "fr": "Colonne de filtre"
+      },
       "properties": {
         "key": {
           "type": "string"
@@ -229,7 +289,10 @@
     },
     "filterFieldString": {
       "type": "object",
-      "title": "Colonne de filtre",
+      "title": "Filter column",
+      "x-i18n-title": {
+        "fr": "Colonne de filtre"
+      },
       "properties": {
         "key": {
           "type": "string"

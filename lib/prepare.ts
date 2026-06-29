@@ -18,13 +18,13 @@ export default async ({ catalogConfig, capabilities, secrets }: PrepareContext<D
   // test the url
   try {
     if (!catalogConfig.url) {
-      throw new Error('URL du catalogue non définie')
+      throw new Error('Catalog URL not defined')
     }
     const config = secrets.apiKey ? { headers: { 'x-apiKey': secrets.apiKey } } : undefined
     await axios.get(catalogConfig.url + '/data-fair/api/v1/catalog/datasets?size=1&select=id', config)
   } catch (e) {
-    console.error('Erreur URL pendant la configuration : ', e instanceof Error ? e.message : e)
-    throw new Error(`Configuration invalide, veuillez vérifier l’URL du catalogue et la clé API si nécessaire (${e instanceof Error ? e.message : e})`)
+    console.error('URL error during configuration: ', e instanceof Error ? e.message : e)
+    throw new Error(`Invalid configuration, please check the catalog URL and the API key if needed (${e instanceof Error ? e.message : e})`)
   }
 
   return {

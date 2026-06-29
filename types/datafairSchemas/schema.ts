@@ -13,7 +13,7 @@ export default {
   properties: {
     count: {
       type: 'number',
-      description: 'Nombre total de jeux de données'
+      description: 'Total number of datasets'
     },
     results: {
       type: 'array',
@@ -85,7 +85,7 @@ export default {
         },
         image: {
           type: 'string',
-          description: "URL d'une image, illustration du jeu de données"
+          description: 'URL of an image illustrating the dataset'
         },
         license: {
           type: 'object',
@@ -221,71 +221,71 @@ export default {
                     type: 'boolean',
                     default: true,
                     'x-display': 'switch',
-                    title: 'Filtrable sur valeur exacte',
-                    description: 'Désactivez cette capacité si la donnée contient par exemple des textes longs pour lesquels des filtres sur valeurs exactes ont peu de sens.'
+                    title: 'Filterable on exact value',
+                    description: 'Disable this capability if the data contains, for example, long texts for which filters on exact values make little sense.'
                   },
                   values: {
                     type: 'boolean',
                     default: true,
                     'x-display': 'switch',
-                    title: 'Triable et groupable',
-                    description: 'Désactivez cette capacité si la donnée contient par exemple des textes longs pour lesquels trier ou grouper par valeur a peu de sens.'
+                    title: 'Sortable and groupable',
+                    description: 'Disable this capability if the data contains, for example, long texts for which sorting or grouping by value makes little sense.'
                   },
                   textStandard: {
                     type: 'boolean',
                     default: true,
                     'x-display': 'switch',
-                    title: 'Texte analysé pour recherche textuelle',
-                    description: "Désactivez cette capacité dans le cas d'un code, une url, etc. N'importe quel contenu sur lequel la recherche de mots a peu de sens."
+                    title: 'Text analyzed for full-text search',
+                    description: 'Disable this capability for a code, a URL, etc. Any content for which word search makes little sense.'
                   },
                   text: {
                     type: 'boolean',
                     default: true,
                     'x-display': 'switch',
-                    title: 'Texte analysé spécifiquement pour la langue française',
-                    description: "Désactivez cette capacité pour tout contenu qui n'est pas en langue française ou pour lequel la recherche de mots a peu de sens."
+                    title: 'Text analyzed specifically for the French language',
+                    description: 'Disable this capability for any content that is not in French or for which word search makes little sense.'
                   },
                   textAgg: {
                     type: 'boolean',
                     default: false,
                     'x-display': 'switch',
-                    title: 'Statistiques de mots',
-                    description: "Activez cette capacité si avez l'intention d'obtenir des statistiques sur les occurrences de mots (par exemple pour construire un nuage de mot)."
+                    title: 'Word statistics',
+                    description: 'Enable this capability if you intend to obtain statistics on word occurrences (for example to build a word cloud).'
                   },
                   wildcard: {
                     type: 'boolean',
                     default: false,
                     'x-display': 'switch',
-                    title: 'Texte filtrable sur groupe de caractères',
-                    description: "Activez cette capacité si vous avez l'intention de filtrer ce contenu spécifiquement sur une suite de caractères (par exemple si un filtre sur mots entiers ou sur valeur exacte ne convient pas)."
+                    title: 'Text filterable on character group',
+                    description: 'Enable this capability if you intend to filter this content specifically on a sequence of characters (for example if a filter on whole words or exact value is not suitable).'
                   },
                   insensitive: {
                     type: 'boolean',
                     default: true,
                     'x-display': 'switch',
-                    title: 'Tri amélioré avec casse et accents',
-                    description: 'Désactivez cette capacité si le contenu ne sera pas utilisé pour du tri ou bien si il ne contient pas de variations avec accents et majuscules.'
+                    title: 'Improved sorting with case and accents',
+                    description: 'Disable this capability if the content will not be used for sorting or if it does not contain variations with accents and uppercase letters.'
                   },
                   geoShape: {
                     type: 'boolean',
                     default: true,
                     'x-display': 'switch',
-                    title: 'Formes géométriques complexes',
-                    description: 'Désactivez cette capacité si la donnée ne contient que des géométries basiques de points ou bien si requêter les géométries uniquement à partir de leurs centroïdes est suffisant pour vos besoins.'
+                    title: 'Complex geometric shapes',
+                    description: 'Disable this capability if the data only contains basic point geometries or if querying geometries solely from their centroids is sufficient for your needs.'
                   },
                   vtPrepare: {
                     type: 'boolean',
                     default: false,
                     'x-display': 'switch',
-                    title: 'Tuiles vectorielles préparées',
-                    description: "Activez cette capacité pour précalculer des éléments utiles à la construction de tuiles vectorielles pour le rendu cartographique du jeu de données. Activez cette option si le jeu de données contient des données géogreaphiques denses à afficher en grande quantité. La contre-partie est une augmentation du temps d'indexation et du volume de données indexées."
+                    title: 'Prepared vector tiles',
+                    description: 'Enable this capability to precompute elements useful for building vector tiles for the map rendering of the dataset. Enable this option if the dataset contains dense geographic data to be displayed in large quantities. The trade-off is an increase in indexing time and in the volume of indexed data.'
                   },
                   indexAttachment: {
                     type: 'boolean',
                     default: true,
                     'x-display': 'switch',
-                    title: 'Contenu des pièces jointes analysé pour recherche textuelle',
-                    description: "Désactivez cette option si vous souhaitez que les pièces jointes soient simplement téléchargeables et que l'extraction de leur contenu textuel pour recherche de mots n'est pas pertinente."
+                    title: 'Attachment content analyzed for full-text search',
+                    description: 'Disable this option if you want attachments to be simply downloadable and the extraction of their textual content for word search is not relevant.'
                   }
                 }
               },
@@ -336,11 +336,11 @@ export default {
                   },
                   remoteService: {
                     type: 'string',
-                    description: "L'identifiant du service distant utilisé pour l'enrichissement"
+                    description: 'The identifier of the remote service used for enrichment'
                   },
                   action: {
                     type: 'string',
-                    description: "L'identifiant de l'action du service distant à utiliser pour l'enrichissement"
+                    description: 'The identifier of the remote service action to use for enrichment'
                   }
                 }
               },
@@ -390,7 +390,7 @@ export default {
             },
             dataFiles: {
               type: 'array',
-              description: 'Le tableau de résultats.',
+              description: 'The array of data files.',
               items: {
                 type: 'object',
                 properties: {
@@ -423,7 +423,7 @@ export default {
         },
         count: {
           type: 'number',
-          description: 'The number of rowns'
+          description: 'The number of rows'
         }
       }
     }

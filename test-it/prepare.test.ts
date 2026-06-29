@@ -88,7 +88,7 @@ describe('catalog-data-fair prepare function', () => {
         async () => {
           await catalogPlugin.prepare(context)
         },
-        /Configuration invalide/i,
+        /Invalid configuration/i,
         'Should throw configuration error'
       )
     })
@@ -104,7 +104,7 @@ describe('catalog-data-fair prepare function', () => {
         async () => {
           await catalogPlugin.prepare(context)
         },
-        /URL du catalogue non définie/i,
+        /Catalog URL not defined/i,
         'Should throw error for missing URL'
       )
     })
@@ -125,7 +125,7 @@ describe('catalog-data-fair prepare function', () => {
         async () => {
           await catalogPlugin.prepare(context)
         },
-        /Configuration invalide/i,
+        /Invalid configuration/i,
         'Should throw configuration error for network issues'
       )
     })

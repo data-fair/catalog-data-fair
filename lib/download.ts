@@ -14,7 +14,7 @@ import slugify from 'slugify'
  * @returns A promise that resolves to the dataset metadata with the downloaded file path included.
  */
 export const getResource = async (context: GetResourceContext<DataFairConfig>): ReturnType<CatalogPlugin['getResource']> => {
-  context.log.step('Import de la ressource')
+  context.log.step('Importing the resource')
 
   const { resource, file } = await getMetaData(context)
   resource.filePath = await downloadResource(context, file, resource)
@@ -38,10 +38,10 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
       throw new Error(`HTTP error : ${res.status}, ${res.data}`)
     }
     dataset = res.data
-    log.info('Import des métadonnées de la ressource', { url })
+    log.info('Importing resource metadata', { url })
   } catch (e) {
     console.error('Error while fetching metadatas', e)
-    throw new Error(`Erreur lors de la récupération de la resource DataFair. ${e instanceof Error ? e.message : e}`)
+    throw new Error(`Error retrieving the DataFair resource. ${e instanceof Error ? e.message : e}`)
   }
 
   dataset.schema = (dataset.schema ?? []).map((field) => {
@@ -99,17 +99,17 @@ const downloadResource = async (context: GetResourceContext<DataFairConfig>, fil
   const filePath = join(context.tmpDir, `${context.resourceId}.csv`)
   try {
     if (file && !context.importConfig.fields?.length && !context.importConfig.filters?.length) {
-      await context.log.task('downloading', 'Téléchargement en cours...', res.size || NaN)
+      await context.log.task('downloading', 'Downloading...', res.size || NaN)
       await downloadResourceFile(filePath, context)
     } else {
-      await context.log.task('downloading', 'Téléchargement en cours...', NaN)
+      await context.log.task('downloading', 'Downloading...', NaN)
       await downloadResourceLines(filePath, context)
     }
     return filePath
   } catch (error) {
     console.error('Error while downloading the file', error)
-    context.log.error(`Erreur pendant le téléchargement du fichier : ${error instanceof Error ? error.message : error}`)
-    throw new Error(`Erreur pendant le téléchargement du fichier: ${error instanceof Error ? error.message : String(error)}`)
+    context.log.error(`Error while downloading the file: ${error instanceof Error ? error.message : error}`)
+    throw new Error(`Error while downloading the file: ${error instanceof Error ? error.message : String(error)}`)
   }
 }
 
