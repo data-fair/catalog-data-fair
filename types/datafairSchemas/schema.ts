@@ -106,6 +106,19 @@ export default {
           }
         },
 
+        modified: {
+          type: 'string',
+          format: 'date'
+        },
+        dataUpdatedAt: {
+          type: 'string',
+          format: 'date'
+        },
+        updatedAt: {
+          type: 'string',
+          format: 'date'
+        },
+
         analysis: {
           type: 'object',
           properties: {

@@ -23,7 +23,7 @@ export const getResource = async (context: GetResourceContext<DataFairConfig>): 
 }
 
 /**
- * Returns the DataFair Resource with all its metadatas
+ * Returns the DataFair Resource with all its metadata
  * @param catalogConfig the DataFair configuration [ex: { url: 'https://example.com' }]
  * @param resourceId the dataset Id to fetch fields from
  * @returns the Resource corresponding to the id by this configuration
@@ -40,7 +40,7 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
     dataset = res.data
     log.info('Importing resource metadata', { url })
   } catch (e) {
-    console.error('Error while fetching metadatas', e)
+    console.error('Error while fetching metadata', e)
     throw new Error(`Error retrieving the DataFair resource. ${e instanceof Error ? e.message : e}`)
   }
 
@@ -71,6 +71,7 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
     frequency: dataset.frequency,
     image: dataset.image,
     keywords: dataset.keywords,
+    modified: dataset.modified || dataset.dataUpdatedAt || dataset.updatedAt,
     analysis: dataset.analysis,
     projection: dataset.projection,
     size,
@@ -92,7 +93,7 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
  * Download a specified from a Data Fair service.
  * If the resource has a distant file and no import configuration will download the distant file, otherwise the data will be fetch by set of rows.
  * @param context - the download context, contains the download configuration, the resource Id
- * @param res - the metadatas about the resource.
+ * @param res - the metadata about the resource.
  * @returns A promise resolving to the file path of the downloaded CSV.
  */
 const downloadResource = async (context: GetResourceContext<DataFairConfig>, file: boolean, res: Resource): Promise<string> => {
@@ -118,7 +119,7 @@ const downloadResource = async (context: GetResourceContext<DataFairConfig>, fil
  * @param filePath - The path to the temporary file where the CSV will be saved.
  * @param catalogConfig - The DataFair configuration object.
  * @param resourceId - The Id of the dataset to download.
- * @param log - The log utilitary to display messages
+ * @param log - The log utility to display messages
  * @returns A promise that resolves when the file is successfully downloaded and saved.
  * @throws If there is an error writing the file or fetching the dataset.
  */
@@ -162,7 +163,7 @@ const downloadResourceFile = async (filePath: string, { catalogConfig, resourceI
       reject(err)
     })
 
-    fileStream.on('error', (err) => {
+    fileStream.on('error', (err: Error) => {
       response.data.destroy()
       fs.unlink(filePath, () => { })
       reject(err)
@@ -178,7 +179,7 @@ const downloadResourceFile = async (filePath: string, { catalogConfig, resourceI
  * @param catalogConfig - The DataFair configuration object.
  * @param resourceId - The Id of the dataset to download.
  * @param importConfig - The import configuration, including filters to apply.
- * @param log - The log utilitary to display messages
+ * @param log - The log utility to display messages
  * @returns A promise that resolves when the file is successfully downloaded and saved.
  * @throws If there is an error writing the file or fetching the dataset.
  */
@@ -226,7 +227,7 @@ const downloadResourceLines = async (destFile: string, { catalogConfig, resource
       if (!isFirstChunk) {
         let skippedHeader = false
         stream = response.data.pipe(new Transform({
-          transform (chunk, _encoding, callback) {
+          transform (chunk: Buffer, _encoding: string, callback: Function) {
             if (!skippedHeader) {
               const headerEndIndex = chunk.indexOf('\n')
               if (headerEndIndex !== -1) {
