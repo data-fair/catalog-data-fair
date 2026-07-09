@@ -71,7 +71,8 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
     frequency: dataset.frequency,
     image: dataset.image,
     keywords: dataset.keywords,
-    modified: dataset.modified || dataset.dataUpdatedAt || dataset.updatedAt,
+    // dataUpdatedAt and updatedAt are date-time, modified is a day-precise date
+    modified: (dataset.modified || dataset.dataUpdatedAt || dataset.updatedAt)?.slice(0, 10),
     analysis: dataset.analysis,
     projection: dataset.projection,
     size,
