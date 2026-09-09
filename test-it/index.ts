@@ -650,6 +650,122 @@ describe('catalog-data-fair', () => {
       assert.strictEqual(resource!.schema?.[0]?.key, 'field1')
       assert.strictEqual(resource.schema?.[0]?.['x-extension'], undefined, 'Extension should be removed')
     })
+
+    it('should strip the data-fair reserved leading underscore for enriched fields with x-extension', async () => {
+      const resourceId = 'enriched-schema-resource'
+      const downloadContext: GetResourceContext<DataFairConfig> = {
+        catalogConfig,
+        resourceId,
+        secrets: {},
+        importConfig: {},
+        update: { metadata: true, schema: true },
+        tmpDir,
+        log: logFunctions
+      }
+
+      nock(catalogConfig.url)
+        .get(`/data-fair/api/v1/datasets/${resourceId}`)
+        .reply(200, {
+          id: resourceId,
+          title: 'Enriched Schema Resource',
+          schema: [
+            {
+              key: '_siret.dep',
+              type: 'string',
+              'x-extension': 'siret',
+              label: 'Département SIRET',
+              'x-concept': { id: 'codeDepartement', title: 'Code département' }
+            },
+            {
+              key: 'normal_field',
+              type: 'string'
+            }
+          ]
+        })
+
+      nock(catalogConfig.url)
+        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000`)
+        .reply(200, '_siret.dep,normal_field\n"75",test\n', { 'Content-Type': 'text/csv' })
+
+      const resource = await getResource(downloadContext as any)
+
+      assert.ok(resource, 'Resource should be returned')
+      assert.ok(resource!.schema, 'Schema should be present')
+      // data-fair reserves the leading "_" for its own calculated fields, so the enriched key must be
+      // slugified like data-fair's escapeKey does (leading "_" and "." removed): `_siret.dep` -> `siretdep`
+      assert.strictEqual(resource!.schema?.[0]?.key, 'siretdep', 'Enriched field key should be slugified like data-fair (leading _ removed)')
+      assert.strictEqual(resource!.schema?.[0]?.['x-extension'], undefined, 'Extension should be removed')
+      assert.strictEqual(resource!.schema?.[0]?.label, 'Département SIRET', 'Label should be preserved')
+      // Normal field keeps its already-valid key (internal underscore is preserved)
+      assert.strictEqual(resource!.schema?.[1]?.key, 'normal_field', 'Normal field should keep key')
+    })
+
+    it('should escape enriched keys like data-fair does for the "legacy" escapeKey algorithm', async () => {
+      const resourceId = 'legacy-enriched-resource'
+      const downloadContext: GetResourceContext<DataFairConfig> = {
+        catalogConfig,
+        resourceId,
+        secrets: {},
+        importConfig: {},
+        update: { metadata: true, schema: true },
+        tmpDir,
+        log: logFunctions
+      }
+
+      nock(catalogConfig.url)
+        .get(`/data-fair/api/v1/datasets/${resourceId}`)
+        .reply(200, {
+          id: resourceId,
+          title: 'Legacy Enriched Resource',
+          // this is what an old dataset (e.g. ICPE) exposes; data-fair will re-escape the CSV headers
+          // with this same algorithm on import (dots become "_" instead of being removed)
+          analysis: { escapeKeyAlgorithm: 'legacy' },
+          schema: [
+            {
+              key: '_infos_commune.nom_departement',
+              'x-originalName': '_infos_commune.nom_departement',
+              'x-extension': 'dataset:communes-de-france/masterData_bulkSearch_infos-commune',
+              title: 'Nom département',
+              type: 'string',
+              'x-refersTo': 'http://rdf.insee.fr/def/geo#Departement',
+              label: 'Nom département'
+            },
+            {
+              // the error field carries a different x-originalName ("_error"); data-fair escapes that,
+              // so we must escape x-originalName and not the key
+              key: '_infos_commune._error',
+              'x-originalName': '_error',
+              'x-extension': 'dataset:communes-de-france/masterData_bulkSearch_infos-commune',
+              type: 'string',
+              label: 'Erreur'
+            },
+            {
+              key: 'nom_ets',
+              'x-originalName': 'nom_ets',
+              type: 'string'
+            }
+          ]
+        })
+
+      nock(catalogConfig.url)
+        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000`)
+        .reply(200, '_infos_commune.nom_departement,_error,nom_ets\n"Corse-du-Sud","",test\n', { 'Content-Type': 'text/csv' })
+
+      const resource = await getResource(downloadContext as any)
+
+      assert.ok(resource, 'Resource should be returned')
+      assert.ok(resource!.schema, 'Schema should be present')
+      // legacy escapeKey: "." -> "_" and leading "_" stripped -> must match what data-fair recomputes
+      assert.strictEqual(resource!.schema?.[0]?.key, 'infos_commune_nom_departement', 'Enriched key must match data-fair legacy escaping')
+      assert.strictEqual(resource!.schema?.[0]?.['x-extension'], undefined, 'Extension should be removed')
+      assert.strictEqual(resource!.schema?.[0]?.label, 'Nom département', 'Label should be preserved')
+      assert.strictEqual(resource!.schema?.[0]?.['x-refersTo'], 'http://rdf.insee.fr/def/geo#Departement', 'Concept should be preserved')
+      // key derived from x-originalName ("_error"), not from the field key
+      assert.strictEqual(resource!.schema?.[1]?.key, 'error', 'Error field key must be escaped from x-originalName')
+      assert.strictEqual(resource!.schema?.[1]?.['x-extension'], undefined, 'Extension should be removed')
+      // non-enriched field is left untouched
+      assert.strictEqual(resource!.schema?.[2]?.key, 'nom_ets', 'Normal field should keep key')
+    })
   })
 
   describe('test plugin capabilities and metadata', () => {

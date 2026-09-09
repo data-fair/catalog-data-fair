@@ -6,6 +6,15 @@ import { join } from 'path'
 import { Transform } from 'stream'
 import slugify from 'slugify'
 
+const escapeKey = (key: string, algorithm?: string): string => {
+  if (algorithm === 'legacy') {
+    key = key.replace(/\.|\s|\$|;|,|:|!/g, '_').replace(/"/g, '')
+    while (key.startsWith('_')) key = key.slice(1)
+    return key
+  }
+  return slugify.default(key, { lower: true, strict: true, replacement: '_' })
+}
+
 /**
  * Retrieves a resource by first fetching its metadata and then downloading the actual resource.
  * The downloaded file path is added to the dataset metadata before returning.
@@ -48,8 +57,9 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
     if (field['x-extension']) {
       return {
         ...field,
-        key: slugify.default(field.key.replace(/^_/, ''), { lower: true, strict: true, replacement: '_' }), // Ensure no leading underscore
-        'x-extension': undefined,   // Remove x-extension property if it exists
+        // recompute the key as DataFair will on re-import, so the field metadata (label…) is kept
+        key: escapeKey(field['x-originalName'] ?? field.key, dataset.analysis?.escapeKeyAlgorithm),
+        'x-extension': undefined // Remove x-extension property if it exists
       }
     }
     return field
