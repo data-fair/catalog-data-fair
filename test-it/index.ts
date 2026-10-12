@@ -9,6 +9,7 @@ import nock from 'nock'
 import { describe, beforeEach, it } from 'node:test'
 import { tmpdir } from 'os'
 import fs from 'fs'
+import { join } from 'path'
 
 const catalogPlugin: CatalogPlugin = plugin as CatalogPlugin
 
@@ -366,6 +367,59 @@ describe('catalog-data-fair', () => {
       assert.ok(fs.existsSync(resource.filePath), 'Downloaded file should exist')
       const content = fs.readFileSync(resource.filePath, 'utf8')
       assert.match(content, /val1,val2/, 'CSV should contain expected data')
+    })
+
+    it('should not send the apiKey to a next link on another origin', async () => {
+      const resourceId = 'my-test-resource-next-link'
+
+      const downloadContext: GetResourceContext<DataFairConfig> = {
+        catalogConfig: { ...catalogConfig, apiKey: '********' },
+        resourceId,
+        secrets: { apiKey: 'testApiKey' },
+        importConfig: {},
+        update: { metadata: true, schema: true },
+        tmpDir,
+        log: logFunctions
+      }
+
+      nock(catalogConfig.url)
+        .get(`/data-fair/api/v1/datasets/${resourceId}`)
+        .reply(200, { id: resourceId, title: 'Test Resource' })
+      nock(catalogConfig.url)
+        .get(`/data-fair/api/v1/datasets/${resourceId}/lines?format=csv&size=10000`)
+        .matchHeader('x-apiKey', 'testApiKey')
+        .reply(200, 'col1\nval1\n', { 'Content-Type': 'text/csv', Link: '<https://evil.example/next>; rel=next' })
+      nock('https://evil.example', { badheaders: ['x-apiKey'] })
+        .get('/next')
+        .reply(200, 'col1\nval2\n', { 'Content-Type': 'text/csv' })
+
+      const resource = await getResource(downloadContext)
+      const content = fs.readFileSync(resource.filePath, 'utf8')
+      assert.equal(content, 'col1\nval1\nval2\n')
+    })
+
+    it('should keep the downloaded file inside tmpDir', async () => {
+      const resourceId = '../../evil'
+
+      const downloadContext: GetResourceContext<DataFairConfig> = {
+        catalogConfig,
+        resourceId,
+        secrets: {},
+        importConfig: {},
+        update: { metadata: true, schema: true },
+        tmpDir,
+        log: logFunctions
+      }
+
+      nock(catalogConfig.url)
+        .get(/evil$/)
+        .reply(200, { id: resourceId, title: 'Test Resource' })
+      nock(catalogConfig.url)
+        .get(/evil\/lines/)
+        .reply(200, 'col1\nval1\n', { 'Content-Type': 'text/csv' })
+
+      const resource = await getResource(downloadContext)
+      assert.equal(resource.filePath, join(tmpDir, 'evil.csv'))
     })
 
     /**

@@ -2,7 +2,7 @@ import type { DataFairConfig, DataFairDataset, ImportConfig } from '#types'
 import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/types-catalogs'
 import axios from '@data-fair/lib-node/axios.js'
 import * as fs from 'fs'
-import { join } from 'path'
+import { basename, join } from 'path'
 import { Transform } from 'stream'
 import slugify from 'slugify'
 
@@ -41,7 +41,8 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
   let dataset: DataFairDataset
   try {
     const url = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}`
-    const config = secrets.apiKey ? { headers: { 'x-apiKey': secrets.apiKey } } : undefined
+    // a custom header survives cross-host redirects, do not follow them when it is sent
+    const config = secrets.apiKey ? { headers: { 'x-apiKey': secrets.apiKey }, maxRedirects: 0 } : undefined
     const res = (await axios.get(url, config))
     if (res.status !== 200) {
       throw new Error(`HTTP error : ${res.status}, ${res.data}`)
@@ -108,7 +109,7 @@ const getMetaData = async ({ catalogConfig, resourceId, log, secrets }: GetResou
  * @returns A promise resolving to the file path of the downloaded CSV.
  */
 const downloadResource = async (context: GetResourceContext<DataFairConfig>, file: boolean, res: Resource): Promise<string> => {
-  const filePath = join(context.tmpDir, `${context.resourceId}.csv`)
+  const filePath = join(context.tmpDir, `${basename(context.resourceId)}.csv`)
   try {
     if (file && !context.importConfig.fields?.length && !context.importConfig.filters?.length) {
       await context.log.task('downloading', 'Downloading...', res.size || NaN)
@@ -138,7 +139,7 @@ const downloadResourceFile = async (filePath: string, { catalogConfig, resourceI
   const url = `${catalogConfig.url}/data-fair/api/v1/datasets/${resourceId}/full`
   const headers = secrets.apiKey ? { 'x-apiKey': secrets.apiKey } : undefined
 
-  const response = await axios.get(url, { responseType: 'stream', headers })
+  const response = await axios.get(url, { responseType: 'stream', headers, maxRedirects: headers ? 0 : undefined })
 
   if (response.status !== 200) {
     throw new Error(`Error while fetching data: HTTP ${response.statusText}`)
@@ -228,7 +229,9 @@ const downloadResourceLines = async (destFile: string, { catalogConfig, resource
   let isFirstChunk = true
 
   while (url) {
-    const response = await axios.get(url, { responseType: 'stream', headers })
+    // the next url comes from a remote Link header, only send the api key to the configured origin
+    const sendKey = !!headers && new URL(url).origin === new URL(catalogConfig.url).origin
+    const response = await axios.get(url, { responseType: 'stream', headers: sendKey ? headers : undefined, maxRedirects: sendKey ? 0 : undefined })
     if (response.status !== 200) {
       throw new Error(`Error while fetching data: HTTP ${response.statusText}`)
     }

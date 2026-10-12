@@ -45,7 +45,7 @@ export const listResources = async (config: ListContext<DataFairConfig, DataFair
   const url = `${config.catalogConfig.url}/data-fair/api/v1/catalog/datasets`
   const headers = config.secrets.apiKey ? { 'x-apiKey': config.secrets.apiKey } : undefined
   try {
-    const res = (await axios.get(url, { params: dataFairParams, headers }))
+    const res = (await axios.get(url, { params: dataFairParams, headers, maxRedirects: headers ? 0 : undefined }))
     if (res.status !== 200 || typeof res.data !== 'object') {
       throw new Error(`HTTP error : ${res.status}, ${res.data}`)
     }
